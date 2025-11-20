@@ -380,6 +380,9 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
         coco_det = self.coco.loadRes(res_file)
         coco_eval = COCOeval(self.coco, coco_det, 'keypoints', self.sigmas)
         coco_eval.params.useSegm = None
+
+        # TODO: maxDet 조절 적용
+        # coco_eval.params.maxDets = [1, 10, 100, 150]
         coco_eval.evaluate()
         coco_eval.accumulate()
         coco_eval.summarize()
