@@ -1,8 +1,14 @@
 import os
 
 data_root = os.getenv('MARUHAN_DATA_ROOT', '../Maruhan-car-kp')
+
 train_ann_file = os.path.join(data_root, 'train', '_annotations.coco.json')
-train_img_prefix = os.path.join(data_root, 'train')
+# val_ann_file = os.path.join(data_root, 'val', '_annotations.coco.json')
+# test_ann_file = os.path.join(data_root, 'test', '_annotations.coco.json')
+
+train_img_prefix = os.path.join(data_root, 'train') + '/'
+# val_img_prefix = os.path.join(data_root, 'val') + '/'
+# test_img_prefix = os.path.join(data_root, 'test') + '/'
 
 dataset_info = dict(
     dataset_name='maruhan_car_kp',
@@ -133,7 +139,7 @@ channel_cfg = dict(
     inference_channel=[0, 1, 2, 3, 4, 5, 6, 7, 8])
 
 data_cfg = dict(
-    image_size=[192, 256],
+    image_size=[192, 256],  # TODO: change to [256, 192] for car crop
     heatmap_size=[48, 64],
     num_output_channels=channel_cfg['num_output_channels'],
     num_joints=channel_cfg['dataset_joints'],
@@ -195,9 +201,9 @@ test_pipeline = val_pipeline
 
 data = dict(
     samples_per_gpu=16,
-    workers_per_gpu=4,
+    workers_per_gpu=2,
     val_dataloader=dict(samples_per_gpu=16),
-    test_dataloader=dict(samples_per_gpu=16),
+    test_dataloader=dict(samples_per_gpu=16, workers_per_gpu=2),
     train=dict(
         type='TopDownCocoDataset',
         ann_file=train_ann_file,
@@ -220,7 +226,7 @@ data = dict(
         pipeline=test_pipeline,
         dataset_info=dataset_info))
 
-evaluation = dict(interval=5, metric='mAP', save_best='AP')
+evaluation = dict(interval=10, metric='mAP', save_best='AP')
 
 optimizer = dict(
     type='AdamW',
@@ -244,7 +250,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=0.001,
     step=[100, 140])
-total_epochs = 100
+total_epochs = 300
 
 model = dict(
     type='TopDown',
