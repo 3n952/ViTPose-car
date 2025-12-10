@@ -1,14 +1,18 @@
 import os
 
 data_root = os.getenv('MARUHAN_DATA_ROOT', '../Maruhan-car-kp')
+benchmark_root = os.getenv('BENCHMARK_DATA_ROOT', 
+                           '/home/skim/workspace/maruhan_demo/benchmark_dataset/Parking-.v1i.coco/train')
 
 train_ann_file = os.path.join(data_root, 'train', '_annotations.coco.json')
 # val_ann_file = os.path.join(data_root, 'val', '_annotations.coco.json')
 # test_ann_file = os.path.join(data_root, 'test', '_annotations.coco.json')
+benchmark_ann_file = os.path.join(benchmark_root, '_annotations.coco.json')
 
 train_img_prefix = os.path.join(data_root, 'train') + '/'
 # val_img_prefix = os.path.join(data_root, 'val') + '/'
 # test_img_prefix = os.path.join(data_root, 'test') + '/'
+benchmark_img_prefix = os.path.join(benchmark_root)
 
 dataset_info = dict(
     dataset_name='maruhan_car_kp',
@@ -216,12 +220,19 @@ data = dict(
         ann_file=train_ann_file,
         img_prefix=train_img_prefix,
         data_cfg=data_cfg,
-        pipeline=val_pipeline,
+        pipeline=test_pipeline,
         dataset_info=dataset_info),
     test=dict(
         type='TopDownCocoDataset',
         ann_file=train_ann_file,
         img_prefix=train_img_prefix,
+        data_cfg=data_cfg,
+        pipeline=test_pipeline,
+        dataset_info=dataset_info),
+    benchmark=dict(
+        type='TopDownCocoDataset',
+        ann_file=benchmark_ann_file,
+        img_prefix=benchmark_img_prefix,
         data_cfg=data_cfg,
         pipeline=test_pipeline,
         dataset_info=dataset_info))
