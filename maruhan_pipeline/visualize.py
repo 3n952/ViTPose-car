@@ -14,7 +14,7 @@ from mmpose.apis import (inference_top_down_pose_model, init_pose_model,
 from mmpose.datasets import DatasetInfo
 
 
-def visualize_wheels(image_path, pose_results, out_file, kpt_thr=0.4):
+def visualize_wheels(image_path, pose_results, out_file):
     """visualize wheels and ground contact"""
 
     img = cv2.imread(image_path)
@@ -56,53 +56,33 @@ def parse_args():
         help='Config path used during training.')
     parser.add_argument('--checkpoint', required=True, help='Checkpoint file.')
     parser.add_argument(
-        '--json-file',
-        default='../Maruhan-car-kp/train/_annotations.coco.json',
-        help='COCO-style annotation file providing image paths and boxes.')
-    parser.add_argument(
-        '--img-root',
-        default='../Maruhan-car-kp/train',
-        help='Root directory containing the images referenced in the JSON.')
-    parser.add_argument(
         '--out-dir',
-        default='runs/exp3/vis',
+        default='runs/benchmark/vis',
         help='Directory to store visualized images.')
     parser.add_argument(
         '--device',
-        default='cuda:1',
+        default='cuda:2',
         help='Device for inference (cuda:0 or cpu).')
-    parser.add_argument(
-        '--kpt-thr',
-        type=float,
-        default=0.4,
-        help='Keypoint confidence threshold for drawing.')
-    parser.add_argument(
-        '--max-images',
-        type=int,
-        default=100,
-        help='Optional limit on how many images to render.')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    coco = COCO(args.json_file)
-    os.makedirs(args.out_dir, exist_ok=True)
 
     pose_model = init_pose_model(
         args.config, args.checkpoint, device=args.device.lower())
 
-    dataset = pose_model.cfg.data['test']['type']
-    dataset_info_cfg = pose_model.cfg.data['test'].get('dataset_info', None)
+    coco = COCO(pose_model.cfg.data['benchmark']['ann_file'])  # option: use test or benchmark annotation file
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    dataset = pose_model.cfg.data['benchmark']['type']  # option: use test or benchmark dataset
+    dataset_info_cfg = pose_model.cfg.data['benchmark'].get('dataset_info', None)
     dataset_info = DatasetInfo(dataset_info_cfg) if dataset_info_cfg else None
 
     img_ids = list(coco.imgs.keys())
-    if args.max_images is not None:
-        img_ids = img_ids[:args.max_images]
-
     for idx, image_id in enumerate(img_ids):
         image_meta = coco.loadImgs(image_id)[0]
-        image_path = os.path.join(args.img_root, image_meta['file_name'])
+        image_path = os.path.join(pose_model.cfg.data['benchmark']['img_prefix'], image_meta['file_name'])
         ann_ids = coco.getAnnIds(image_id)
         ann_info = coco.loadAnns(ann_ids)
         dets = [{
@@ -125,7 +105,7 @@ def main():
             image_path,
             pose_results,
             out_file,
-            kpt_thr=args.kpt_thr)
+            )
         
         print(f"[{idx+1}/{len(img_ids)}] Processed: {image_meta['file_name']}")
 
